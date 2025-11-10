@@ -22,38 +22,22 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* NEW: Subtle gradient background for a modern feel */
+        /* Dark background for modern look and high contrast */
         body {
             background-color: #111827; /* Gray-900 */
-            /* Added a subtle gradient that complements the glass UI */
-            background-image: linear-gradient(135deg, #111827 0%, #111827 70%, #1f1f3a 100%);
         }
 
-        /* NEW: Glassmorphism Card Style */
-        .glass-card {
-            background: rgba(31, 41, 55, 0.4); /* Gray-800 with 40% opacity */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .dashboard-card {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .glass-card:hover {
+        .dashboard-card:hover {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* Sidebar glass is slightly different */
-        .sidebar-glass {
-            background: rgba(31, 41, 55, 0.6); /* Gray-800 with 60% opacity */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Specific styling for the emergency button (Unchanged) */
+        /* Specific styling for the emergency button */
         #emergencyButton {
             animation: pulse-red 1.5s infinite;
         }
@@ -67,75 +51,41 @@
             }
         }
         
-        /* Alert list item glow for visibility (Unchanged) */
+        /* Alert list item glow for visibility */
         .alert-pulse {
             animation: glow-red 1.5s infinite alternate;
         }
 
         @keyframes glow-red {
             0% {
-                box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+                box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); /* Soft red glow */
             }
             100% {
-                box-shadow: 0 0 15px rgba(239, 68, 68, 0.9);
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.9); /* Brighter red glow */
             }
         }
-        
-        /* NEW: Animated border pulse for warning/critical states */
-        @keyframes pulse-border-yellow {
-            0%, 100% { border-color: var(--warning); box-shadow: 0 0 5px var(--warning); }
-            50% { border-color: var(--warning); box-shadow: 0 0 15px var(--warning); }
-        }
-        @keyframes pulse-border-red {
-            0%, 100% { border-color: var(--danger); box-shadow: 0 0 5px var(--danger); }
-            50% { border-color: var(--danger); box-shadow: 0 0 15px var(--danger); }
-        }
-        
-        .animate-pulse-border-yellow {
-            animation: pulse-border-yellow 2s infinite;
-        }
-        .animate-pulse-border-red {
-            animation: pulse-border-red 1.5s infinite;
-        }
 
-        /* NEW: Dynamic Heartbeat Animation */
-        @keyframes live-heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-        
-        .live-heartbeat-icon {
-            /* Animation duration will be set dynamically via JS */
-            animation: live-heartbeat 1s infinite ease-in-out;
-        }
-
-
-        /* D3 Chart Specific Styles (ENHANCED) */
+        /* D3 Chart Specific Styles */
         .axis path, .axis line {
             fill: none;
-            stroke: #4B5563; /* Gray-600 (Lighter for glass) */
+            stroke: #374151; /* Gray-700 */
             shape-rendering: crispEdges;
         }
         .axis text {
-            fill: #D1D5DB; /* Gray-300 (Lighter) */
+            fill: #9CA3AF; /* Gray-400 */
             font-size: 10px;
         }
         .line-heartrate {
             fill: none;
             stroke: var(--primary); /* Violet */
-            stroke-width: 4px; /* Thicker line */
-            stroke-linecap: round;
-        }
-        /* NEW: Gradient area under the line */
-        .area-heartrate {
-            fill: url(#hrGradient);
+            stroke-width: 3px;
         }
     </style>
 </head>
 <body class="text-white min-h-screen flex flex-col lg:flex-row">
 
-    <!-- Sidebar Navigation (Updated with Glass) -->
-    <div id="sidebar" class="sidebar-glass p-4 lg:w-64 w-full lg:h-screen flex lg:flex-col justify-around lg:justify-start lg:space-y-4 shadow-2xl z-10 sticky top-0">
+    <!-- Sidebar Navigation -->
+    <div id="sidebar" class="bg-gray-800 p-4 lg:w-64 w-full lg:h-screen flex lg:flex-col justify-around lg:justify-start lg:space-y-4 shadow-2xl z-10 sticky top-0">
         <h1 class="text-3xl font-bold text-violet-400 hidden lg:block mb-6">CareMonitor</h1>
         
         <button id="navUser" onclick="showDashboard('user')" class="nav-button p-3 rounded-xl flex items-center justify-center lg:justify-start space-x-3 text-lg font-medium transition-all bg-violet-600 hover:bg-violet-700">
@@ -163,7 +113,7 @@
     <!-- Main Content Area -->
     <div id="mainContent" class="flex-1 p-4 sm:p-8 overflow-y-auto">
 
-        <!-- Emergency Alert Modal (Unchanged) -->
+        <!-- Emergency Alert Modal (Visible across all dashboards when active) -->
         <div id="globalAlert" class="hidden fixed inset-0 bg-red-900/90 backdrop-blur-sm z-30 flex items-center justify-center p-4">
             <div class="bg-red-700 border-4 border-red-300 p-8 rounded-2xl shadow-2xl text-center max-w-lg w-full transform transition-all scale-100">
                 <i data-lucide="octagon-alert" class="w-20 h-20 mx-auto text-red-100 mb-4 animate-bounce"></i>
@@ -179,8 +129,8 @@
         <div id="userDashboard" class="dashboard-container space-y-8">
             <h1 class="text-4xl font-extrabold text-violet-300 mb-6">Hello, Mr. John Doe</h1>
             
-            <!-- Contact & Quick Info Header (Updated with Glass) -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 text-center">
+            <!-- Contact & Quick Info Header (For Senior's Peace of Mind) -->
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 text-center">
                 <div class="text-center">
                     <p class="text-gray-400 text-sm">Primary Caretaker</p>
                     <p class="text-xl font-bold text-green-400">Sarah Doe</p>
@@ -194,14 +144,13 @@
                 </div>
             </div>
 
-            <!-- Vitals and Emergency Button (Updated with Glass) -->
+            <!-- Vitals and Emergency Button -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 
                 <!-- Heart Rate Card -->
-                <div id="hrCard" class="glass-card p-6 rounded-2xl border-l-4 border-green-500 lg:col-span-1">
+                <div id="hrCard" class="dashboard-card bg-gray-800 p-6 rounded-2xl border-l-4 border-green-500 lg:col-span-1">
                     <div class="flex items-center space-x-3 mb-2">
-                        <!-- NEW: Added id="hrIcon" for JS animation control -->
-                        <i id="hrIcon" data-lucide="heart" class="w-8 h-8 text-green-400"></i>
+                        <i data-lucide="heart" class="w-8 h-8 text-green-400"></i>
                         <h3 class="text-2xl font-semibold text-gray-300">Heart Rate</h3>
                     </div>
                     <p id="hrValue" class="text-6xl font-extrabold text-white">72 <span class="text-3xl text-gray-400">BPM</span></p>
@@ -209,7 +158,7 @@
                 </div>
 
                 <!-- Blood Pressure Card -->
-                <div id="bpCard" class="glass-card p-6 rounded-2xl border-l-4 border-green-500 lg:col-span-1">
+                <div id="bpCard" class="dashboard-card bg-gray-800 p-6 rounded-2xl border-l-4 border-green-500 lg:col-span-1">
                     <div class="flex items-center space-x-3 mb-2">
                         <i data-lucide="gauge" class="w-8 h-8 text-green-400"></i>
                         <h3 class="text-2xl font-semibold text-gray-300">Blood Pressure</h3>
@@ -219,7 +168,7 @@
                 </div>
 
                 <!-- Fall Detection Card -->
-                <div id="fallCard" class="glass-card p-6 rounded-2xl border-l-4 border-green-500 lg:col-span-1">
+                <div id="fallCard" class="dashboard-card bg-gray-800 p-6 rounded-2xl border-l-4 border-green-500 lg:col-span-1">
                     <div class="flex items-center space-x-3 mb-2">
                         <i data-lucide="accessibility" class="w-8 h-8 text-green-400"></i>
                         <h3 class="text-2xl font-semibold text-gray-300">Fall Detection</h3>
@@ -228,17 +177,17 @@
                     <p id="fallStatus" class="text-base text-green-400 mt-2 font-medium">No Incident</p>
                 </div>
 
-                <!-- Emergency Button (Unchanged) -->
+                <!-- Emergency Button (Most Critical Element) -->
                 <button id="emergencyButton" onclick="simulateAlert('Emergency Button Pressed')" class="col-span-1 bg-red-600 hover:bg-red-700 text-white font-extrabold text-3xl rounded-2xl transition-all transform hover:scale-[1.02]">
                     <i data-lucide="siren" class="w-10 h-10 mx-auto mb-2"></i>
                     PRESS FOR HELP
                 </button>
             </div>
             
-            <!-- Vitals Chart and Location Map (Updated with Glass) -->
+            <!-- Vitals Chart and Location Map -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Heart Rate Chart -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                     <h3 class="text-xl font-semibold text-violet-300 mb-4">Heart Rate Trend (Last 30 Min)</h3>
                     <div id="hrChartUser" class="w-full aspect-[2/1]">
                         <!-- D3 Chart will be injected here -->
@@ -246,15 +195,14 @@
                 </div>
 
                 <!-- Location Map (Simulated) -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                     <h3 class="text-xl font-semibold text-violet-300 mb-4 flex items-center">
                         <i data-lucide="map-pin" class="w-5 h-5 mr-2"></i>
                         Current Location
                     </h3>
-                    <!-- NEW: Replaced placeholder with a 'tech' gradient map -->
                     <div id="locationMap" class="w-full aspect-[2/1] bg-gray-900 rounded-lg relative overflow-hidden">
                         <!-- Simulated Map Container -->
-                        <div class="absolute inset-0 opacity-60" style="background-image: radial-gradient(circle at 25% 25%, #4B5563 2px, transparent 0), radial-gradient(circle at 75% 75%, #4B5563 2px, transparent 0), linear-gradient(45deg, #1f2937, #374151);"></div>
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://placehold.co/600x300/1F2937/F3F4F6?text=Simulated+Neighborhood+Map');"></div>
                         <div id="patientMarker" class="absolute w-5 h-5 rounded-full bg-violet-500 border-4 border-white animate-pulse" style="top: 50%; left: 50%;"></div>
                         <div id="locationText" class="absolute bottom-2 left-2 bg-gray-800/80 backdrop-blur-sm p-2 rounded-lg text-sm font-medium">
                             Location: Living Room (50%, 50%)
@@ -263,46 +211,44 @@
                 </div>
             </div>
 
-            <!-- Real-time Status Log (Large, Simple) (Updated with Glass) -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl">
+            <!-- Real-time Status Log (Large, Simple) -->
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                 <h3 class="text-2xl font-semibold text-violet-300 mb-4">Latest Activity</h3>
                 <div id="activityLog" class="text-lg space-y-2 max-h-48 overflow-y-auto">
                     <p class="text-gray-400">[00:00:00] System Initialized. Readings are nominal.</p>
                 </div>
             </div>
 
-            <!-- Sim Buttons (Unchanged) -->
             <div class="flex justify-center pt-4">
                 <button onclick="simulateHealthChange('warn')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-xl mr-4 text-sm font-medium">Simulate Warning (High BP)</button>
                 <button onclick="simulateHealthChange('critical')" class="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl text-sm font-medium">Simulate Critical (Fall/HR)</button>
             </div>
         </div>
 
-        <!-- Caretaker Dashboard (Updated with Glass) -->
         <div id="caretakerDashboard" class="dashboard-container space-y-8 hidden">
             <h1 class="text-4xl font-extrabold text-violet-300 mb-6">Caretaker Dashboard: John Doe</h1>
             
             <!-- Current Status Overview & Chart -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                 <div class="glass-card p-6 rounded-2xl shadow-xl lg:col-span-1">
+                 <div class="bg-gray-800 p-6 rounded-2xl shadow-xl lg:col-span-1">
                     <h3 class="text-2xl font-semibold text-violet-300 mb-4">Current Health Status</h3>
                     <div class="space-y-4">
-                        <div class="p-3 bg-gray-900/50 rounded-lg">
+                        <div class="p-3 bg-gray-700 rounded-lg">
                             <p class="text-sm text-gray-400">Heart Rate</p>
                             <p id="ctHrValue" class="text-2xl font-bold text-green-400">72 BPM</p>
                         </div>
-                        <div class="p-3 bg-gray-900/50 rounded-lg">
+                        <div class="p-3 bg-gray-700 rounded-lg">
                             <p class="text-sm text-gray-400">Blood Pressure</p>
                             <p id="ctBpValue" class="text-2xl font-bold text-green-400">120/80 mmHg</p>
                         </div>
-                        <div class="p-3 bg-gray-900/50 rounded-lg">
+                        <div class="p-3 bg-gray-700 rounded-lg">
                             <p class="text-sm text-gray-400">Last Incident</p>
                             <p id="ctLastIncident" class="text-2xl font-bold text-gray-300">None (00:00)</p>
                         </div>
                     </div>
                 </div>
                 <!-- Heart Rate Chart for Caretaker -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl lg:col-span-2">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-xl lg:col-span-2">
                     <h3 class="text-xl font-semibold text-violet-300 mb-4">Heart Rate Trend (Last 30 Min)</h3>
                     <div id="hrChartCaretaker" class="w-full aspect-[3/1]">
                         <!-- D3 Chart will be injected here -->
@@ -313,21 +259,21 @@
             <!-- Schedule and Alerts -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Schedule Panel -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                     <h3 class="text-2xl font-semibold text-violet-300 mb-4 flex items-center">
                         <i data-lucide="calendar-check" class="w-6 h-6 mr-2"></i>
                         Schedule & Reminders
                     </h3>
                     <ul class="space-y-3">
-                        <li class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center text-gray-300">
+                        <li class="p-3 bg-gray-700 rounded-lg flex justify-between items-center text-gray-300">
                             <span>08:00 AM - Medication (Pill A)</span>
                             <span class="text-green-400 font-medium">Done</span>
                         </li>
-                        <li class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center text-gray-300">
+                        <li class="p-3 bg-gray-700 rounded-lg flex justify-between items-center text-gray-300">
                             <span>10:30 AM - Doctor Appointment (Dr. Lee)</span>
                             <span class="text-yellow-400 font-medium">Upcoming</span>
                         </li>
-                        <li class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center text-gray-300">
+                        <li class="p-3 bg-gray-700 rounded-lg flex justify-between items-center text-gray-300">
                             <span>07:00 PM - Medication (Pill B)</span>
                             <span class="text-red-400 font-medium">Due soon</span>
                         </li>
@@ -335,27 +281,26 @@
                 </div>
 
                 <!-- Alerts Panel -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                     <h3 class="text-2xl font-semibold text-red-500 mb-4 flex items-center">
                         <i data-lucide="bell-ring" class="w-6 h-6 mr-2"></i>
                         URGENT ALERTS (<span id="alertCountCaretaker">0</span>)
                     </h3>
                     <ul id="caretakerAlertList" class="space-y-3 max-h-80 overflow-y-auto">
-                        <li class="p-3 bg-gray-900/50 rounded-lg text-gray-400">No recent critical alerts.</li>
+                        <li class="p-3 bg-gray-700 rounded-lg text-gray-400">No recent critical alerts.</li>
                     </ul>
                 </div>
             </div>
         </div>
-        
-        <!-- Hospital Dashboard (Updated with Glass) -->
+
         <div id="hospitalDashboard" class="dashboard-container space-y-8 hidden">
             <h1 class="text-4xl font-extrabold text-violet-300 mb-6">Hospital Triage Dashboard</h1>
 
             <!-- Simulated Patient List -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                 <h3 class="text-2xl font-semibold text-violet-300 mb-4">Monitored Patients Overview</h3>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-700/50">
+                    <table class="min-w-full divide-y divide-gray-700">
                         <thead>
                             <tr class="text-left text-gray-400 uppercase tracking-wider text-sm">
                                 <th class="py-3 px-4">Patient Name</th>
@@ -365,9 +310,9 @@
                                 <th class="py-3 px-4">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="hospitalPatientList" class="divide-y divide-gray-700/50 text-lg">
+                        <tbody id="hospitalPatientList" class="divide-y divide-gray-700 text-lg">
                             <!-- John Doe (Our main user) -->
-                            <tr id="patientRowJohnDoe" class="hover:bg-gray-700/50 transition-colors">
+                            <tr id="patientRowJohnDoe" class="hover:bg-gray-700">
                                 <td class="py-4 px-4 font-medium">John Doe</td>
                                 <td id="hospStatusJohnDoe" class="py-4 px-4 text-green-400 font-bold">STABLE</td>
                                 <td id="hospVitalsJohnDoe" class="py-4 px-4">72 BPM / 120/80</td>
@@ -377,14 +322,14 @@
                                 </td>
                             </tr>
                             <!-- Other simulated patients -->
-                            <tr class="hover:bg-gray-700/50 transition-colors">
+                            <tr class="hover:bg-gray-700">
                                 <td class="py-4 px-4 font-medium">Alice Smith</td>
                                 <td class="py-4 px-4 text-gray-400">Offline</td>
                                 <td class="py-4 px-4">--</td>
                                 <td class="py-4 px-4 text-gray-400">None</td>
                                 <td class="py-4 px-4"><button class="bg-gray-600 text-gray-400 text-sm font-medium py-1 px-3 rounded-lg cursor-not-allowed">View Profile</button></td>
                             </tr>
-                            <tr class="hover:bg-gray-700/50 transition-colors">
+                            <tr class="hover:bg-gray-700">
                                 <td class="py-4 px-4 font-medium">Robert Brown</td>
                                 <td class="py-4 px-4 text-green-400 font-bold">STABLE</td>
                                 <td class="py-4 px-4">68 BPM / 125/85</td>
@@ -397,13 +342,13 @@
             </div>
 
             <!-- Hospital Alerts List -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
                 <h3 class="text-2xl font-semibold text-red-500 mb-4 flex items-center">
                     <i data-lucide="alert-triangle" class="w-6 h-6 mr-2"></i>
                     CRITICAL INCIDENTS LOG (<span id="alertCountHospital">0</span>)
                 </h3>
                 <ul id="hospitalAlertList" class="space-y-3 max-h-80 overflow-y-auto">
-                    <li class="p-3 bg-gray-900/50 rounded-lg text-gray-400">No critical alerts requiring action.</li>
+                    <li class="p-3 bg-gray-700 rounded-lg text-gray-400">No critical alerts requiring action.</li>
                 </ul>
             </div>
         </div>
@@ -436,7 +381,7 @@
             }
         };
 
-        // --- DOMElements (UPDATED) ---
+        // --- DOMElements (Same as before) ---
         const DOMElements = {
             // User Dashboard
             hrCard: document.getElementById('hrCard'),
@@ -453,7 +398,6 @@
             locationMap: document.getElementById('locationMap'),
             patientMarker: document.getElementById('patientMarker'),
             locationText: document.getElementById('locationText'),
-            hrIcon: document.getElementById('hrIcon'), // NEW: For animation
             
             // Shared
             globalAlert: document.getElementById('globalAlert'),
@@ -476,7 +420,7 @@
             patientRowJohnDoe: document.getElementById('patientRowJohnDoe'),
         };
         
-        // --- Audio Alert System (Unchanged) ---
+        // --- Audio Alert System ---
         let synth = null;
         let isPlayingAlarm = false;
 
@@ -514,7 +458,7 @@
             isPlayingAlarm = false;
         }
         
-        // --- D3 Charting Logic (ENHANCED) ---
+        // --- D3 Charting Logic (NEW) ---
         const CHART_MARGIN = { top: 10, right: 20, bottom: 30, left: 40 };
 
         function drawHeartRateChart(containerId) {
@@ -527,8 +471,6 @@
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
 
-            if (containerWidth === 0 || containerHeight === 0) return; // Don't draw if not visible
-
             const width = containerWidth - CHART_MARGIN.left - CHART_MARGIN.right;
             const height = containerHeight - CHART_MARGIN.top - CHART_MARGIN.bottom;
             
@@ -537,20 +479,6 @@
                 .attr("height", containerHeight)
                 .append("g")
                 .attr("transform", `translate(${CHART_MARGIN.left},${CHART_MARGIN.top})`);
-            
-            // NEW: Define gradient
-            const gradient = svg.append("defs").append("linearGradient")
-                .attr("id", "hrGradient")
-                .attr("x1", "0%").attr("y1", "0%")
-                .attr("x2", "0%").attr("y2", "100%");
-            gradient.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", "var(--primary)")
-                .attr("stop-opacity", 0.4);
-            gradient.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", "var(--primary)")
-                .attr("stop-opacity", 0);
 
             // 1. Scales
             const x = d3.scaleTime()
@@ -580,10 +508,10 @@
                 .append("text")
                 .attr("fill", "#9CA3AF")
                 .attr("transform", "rotate(-90)")
-                .attr("y", -25) // Adjusted position
+                .attr("y", 6)
                 .attr("dy", ".71em")
                 .style("text-anchor", "end")
-                .text("BPM");
+                .text("Heart Rate (BPM)");
                 
             // 3. Line Generator
             const line = d3.line()
@@ -591,27 +519,14 @@
                 .y(d => y(d.value))
                 .curve(d3.curveMonotoneX);
 
-            // 4. NEW: Area Generator
-            const area = d3.area()
-                .x(d => x(d.timestamp))
-                .y0(height)
-                .y1(d => y(d.value))
-                .curve(d3.curveMonotoneX);
-
-            // 5. Draw Area
-            svg.append("path")
-                .datum(Patient.hrHistory)
-                .attr("class", "area-heartrate")
-                .attr("d", area);
-
-            // 6. Draw Line (on top of area)
+            // 4. Draw/Update Line
             svg.append("path")
                 .datum(Patient.hrHistory)
                 .attr("class", "line-heartrate")
                 .attr("d", line);
         }
 
-        // --- Location Tracking Logic (Unchanged) ---
+        // --- Location Tracking Logic (NEW) ---
         function updateLocation() {
             // Update marker position
             const marker = DOMElements.patientMarker;
@@ -619,7 +534,7 @@
             marker.style.left = `${Patient.location.x}%`;
             
             // Update text
-            DOMElements.locationText.textContent = `Location: ${Patient.location.room} (${Patient.location.x.toFixed(0)}%, ${Patient.location.y.toFixed(0)}%)`;
+            DOMElements.locationText.textContent = `Location: ${Patient.location.room} (${Patient.location.x}%, ${Patient.location.y}%)`;
 
             // Randomly move location within bounds (5% to 95%) and room
             if (Patient.status !== 'CRITICAL') {
@@ -635,7 +550,7 @@
         }
 
 
-        // --- State Management and Initial Render (UPDATED) ---
+        // --- State Management and Initial Render ---
 
         function updateUI() {
             // 1. Update Vitals and Statuses
@@ -664,71 +579,31 @@
             ['hr', 'bp', 'fall'].forEach(v => {
                 const card = DOMElements[`${v}Card`];
                 const statusEl = DOMElements[`${v}Status`];
-                // FIX: Query for the SVG element that Lucide creates
-                const icon = v === 'hr' ? DOMElements.hrIcon.querySelector('svg') : card.querySelector('svg');
                 const color = v === 'hr' ? hrColor : (v === 'bp' ? bpColor : fallColor);
-                
-                // Reset classes - Use classList for safety
-                card.classList.remove('border-red-500', 'border-yellow-500', 'border-green-500', 'animate-pulse-border-red', 'animate-pulse-border-yellow');
+                card.className = card.className.replace(/border-(red|yellow|green)-\d{3,}/g, `border-${color}-500`);
                 statusEl.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
-                if (icon) {
-                    icon.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
-                }
-
-                // Apply new classes
-                card.classList.add(`border-${color}-500`);
                 statusEl.classList.add(`text-${color}-400`);
-                if (icon) {
-                    icon.classList.add(`text-${color}-400`);
-                }
-                
-                if (color === 'red') {
-                    card.classList.add('animate-pulse-border-red');
-                    if (v === 'hr') statusEl.textContent = "Critical Rate";
-                    if (v === 'bp') statusEl.textContent = "Critical Pressure";
-                    if (v === 'fall') statusEl.textContent = "Incident Detected!";
-                } else if (color === 'yellow') {
-                    card.classList.add('animate-pulse-border-yellow');
-                    if (v === 'hr') statusEl.textContent = "High Rate";
-                    if (v === 'bp') statusEl.textContent = "High Pressure";
-                } else {
-                    if (v === 'hr') statusEl.textContent = "Normal Range";
-                    if (v === 'bp') statusEl.textContent = "Normal Range";
-                    if (v === 'fall') statusEl.textContent = "No Incident";
-                }
             });
-            
-            // NEW: Update live heartbeat animation
-            const hrIconEl = DOMElements.hrIcon.querySelector('svg') || DOMElements.hrIcon;
-            if (hrIconEl) {
-                const pulseDuration = (60 / Patient.hr).toFixed(2);
-                hrIconEl.classList.add('live-heartbeat-icon');
-                hrIconEl.style.animationDuration = `${pulseDuration}s`;
-            }
             
             // 2. Update Caretaker Vitals
             DOMElements.ctHrValue.textContent = `${Patient.hr} BPM`;
             DOMElements.ctBpValue.textContent = `${Patient.bpSystolic}/${Patient.bpDiastolic} mmHg`;
-            // FIXED: Refactored to use classList
-            DOMElements.ctHrValue.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
-            DOMElements.ctHrValue.classList.add(`text-${hrColor}-400`);
-            DOMElements.ctBpValue.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
-            DOMElements.ctBpValue.classList.add(`text-${bpColor}-400`);
+            DOMElements.ctHrValue.className = DOMElements.ctHrValue.className.replace(/text-(red|yellow|green)-\d{3,}/g, `text-${hrColor}-400`);
+            DOMElements.ctBpValue.className = DOMElements.ctBpValue.className.replace(/text-(red|yellow|green)-\d{3,}/g, `text-${bpColor}-400`);
             
             // 3. Update Hospital Dashboard
             DOMElements.hospStatusJohnDoe.textContent = overallStatus;
-            // FIXED: Refactored to use classList
-            DOMElements.hospStatusJohnDoe.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
-            DOMElements.hospStatusJohnDoe.classList.add(`text-${overallStatus === 'CRITICAL' ? 'red' : (overallStatus === 'WARNING' ? 'yellow' : 'green')}-400`);
+            DOMElements.hospStatusJohnDoe.className = DOMElements.hospStatusJohnDoe.className.replace(/text-(red|yellow|green)-\d{3,}/g, `text-${overallStatus === 'CRITICAL' ? 'red' : (overallStatus === 'WARNING' ? 'yellow' : 'green')}-400`);
             DOMElements.hospVitalsJohnDoe.textContent = `${Patient.hr} BPM / ${Patient.bpSystolic}/${Patient.bpDiastolic}`;
             DOMElements.patientRowJohnDoe.classList.toggle('bg-red-900/50', overallStatus === 'CRITICAL');
             DOMElements.patientRowJohnDoe.classList.toggle('animate-pulse', overallStatus === 'CRITICAL');
 
             // 4. Update Chart and Location
-            // (These are now called separately to avoid re-drawing on every 5s loop if not needed)
+            drawHeartRateChart('hrChartUser');
+            drawHeartRateChart('hrChartCaretaker');
+            updateLocation();
         }
         
-        // (Function updateAlerts remains unchanged)
         function updateAlerts() {
             // ... (Alerts logic remains the same)
             const listCaretaker = DOMElements.caretakerAlertList;
@@ -747,21 +622,17 @@
 
             if (alertCount === 0) {
                 stopCriticalTone(); 
-                listCaretaker.innerHTML = '<li class="p-3 bg-gray-900/50 rounded-lg text-gray-400">No recent critical alerts.</li>';
-                listHospital.innerHTML = '<li class="p-3 bg-gray-900/50 rounded-lg text-gray-400">No critical alerts requiring action.</li>';
+                listCaretaker.innerHTML = '<li class="p-3 bg-gray-700 rounded-lg text-gray-400">No recent critical alerts.</li>';
+                listHospital.innerHTML = '<li class="p-3 bg-gray-700 rounded-lg text-gray-400">No critical alerts requiring action.</li>';
                 DOMElements.globalAlert.classList.add('hidden');
-                if (DOMElements.ctLastIncident) { // Check if element exists
-                    DOMElements.ctLastIncident.textContent = `None (${formatTime(Patient.lastUpdate)})`;
-                }
+                DOMElements.ctLastIncident.textContent = `None (${formatTime(Patient.lastUpdate)})`;
             } else {
                 playCriticalTone(); 
                 DOMElements.globalAlert.classList.remove('hidden');
                 
                 const latestAlert = criticalAlerts[0];
                 DOMElements.alertReason.textContent = `${latestAlert.type} Detected! Vitals: HR ${Patient.hr}, BP ${Patient.bpSystolic}/${Patient.bpDiastolic}.`;
-                if (DOMElements.ctLastIncident) { // Check if element exists
-                    DOMElements.ctLastIncident.textContent = `${latestAlert.type} (${formatTime(latestAlert.timestamp)})`;
-                }
+                DOMElements.ctLastIncident.textContent = `${latestAlert.type} (${formatTime(latestAlert.timestamp)})`;
 
                 criticalAlerts.forEach(alert => {
                     const listItemHTML = `
@@ -778,12 +649,9 @@
             
             const latestLogEntry = Patient.alerts.length > 0 ? Patient.alerts[0] : { timestamp: Patient.lastUpdate, message: "Readings are nominal." };
             const logHTML = `<p class="${latestLogEntry.severity === 'CRITICAL' ? 'text-red-400 font-bold' : 'text-gray-300'}">[${formatTime(latestLogEntry.timestamp)}] ${latestLogEntry.message}</p>`;
-            
-            if (DOMElements.activityLog) { // Check if element exists
-                DOMElements.activityLog.insertAdjacentHTML('afterbegin', logHTML);
-                while (DOMElements.activityLog.children.length > 5) {
-                    DOMElements.activityLog.removeChild(DOMElements.activityLog.lastChild);
-                }
+            DOMElements.activityLog.insertAdjacentHTML('afterbegin', logHTML);
+            while (DOMElements.activityLog.children.length > 5) {
+                DOMElements.activityLog.removeChild(DOMElements.activityLog.lastChild);
             }
             
             updateUI();
@@ -793,13 +661,7 @@
             return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        // --- NEW: State Broadcasting ---
-        function broadcastState() {
-            // JSON.stringify automatically converts Date objects to ISO strings
-            localStorage.setItem('smartHealthState', JSON.stringify(Patient));
-        }
-
-        // --- Alert Simulation and Dismissal (UPDATED) ---
+        // --- Alert Simulation and Dismissal ---
         
         function simulateAlert(type) {
             if (Patient.alerts.length > 0) return;
@@ -833,29 +695,28 @@
             });
 
             updateAlerts();
-            broadcastState(); // NEW: Broadcast change immediately
         }
 
         function simulateHealthChange(level) {
             Patient.lastUpdate = new Date();
             
             if (level === 'warn') {
-                Patient.hr = 105; // Warning
+                Patient.hr = 90;
                 Patient.bpSystolic = 155;
                 Patient.bpDiastolic = 95;
                 Patient.fallDetected = false;
                 Patient.status = 'WARNING';
                 Patient.alerts.unshift({
                     timestamp: Patient.lastUpdate,
-                    type: 'Warning: Elevated Vitals',
+                    type: 'Warning: Elevated BP',
                     severity: 'WARNING',
-                    message: "Automated: Vitals are elevated. Monitor closely.",
+                    message: "Automated: Blood pressure is elevated. Monitor closely.",
                     vitals: `${Patient.hr} BPM, ${Patient.bpSystolic}/${Patient.bpDiastolic} mmHg`
                 });
 
             } else if (level === 'critical') {
                 simulateAlert(Math.random() > 0.5 ? 'Fall Detected' : 'Critical Vitals');
-                return; // simulateAlert already broadcasts
+                return;
             } else {
                 Patient.hr = 72;
                 Patient.bpSystolic = 120;
@@ -867,7 +728,6 @@
             Patient.alerts = Patient.alerts.filter(a => a.severity === 'CRITICAL');
             
             updateAlerts();
-            broadcastState(); // NEW: Broadcast change immediately
         }
 
         function dismissAlert() {
@@ -886,127 +746,36 @@
             Patient.location.room = 'Living Room';
 
             updateAlerts();
-            broadcastState(); // NEW: Broadcast change immediately
         }
         
-        // --- View Switching Logic (UPDATED) ---
-        let simulationIntervalID = null; // NEW: Global simulation ID
-
+        // --- View Switching Logic ---
         function showDashboard(view) {
             document.querySelectorAll('.dashboard-container').forEach(el => el.classList.add('hidden'));
             document.getElementById(`${view}Dashboard`).classList.remove('hidden');
             
             document.querySelectorAll('.nav-button').forEach(btn => {
                 btn.classList.remove('bg-violet-600', 'hover:bg-violet-700');
-                btn.classList.add('hover:bg-gray-700');
-                // Make non-active buttons transparent glass
-                btn.style.backgroundColor = "transparent"; 
+                btn.classList.add('bg-transparent', 'hover:bg-gray-700');
             });
 
             const currentNav = document.getElementById(`nav${view.charAt(0).toUpperCase() + view.slice(1)}`);
-            currentNav.classList.remove('hover:bg-gray-700');
+            currentNav.classList.remove('bg-transparent', 'hover:bg-gray-700');
             currentNav.classList.add('bg-violet-600', 'hover:bg-violet-700');
-            currentNav.style.backgroundColor = ""; // Let CSS classes take over
-
-            // NEW: Simulation & URL Hash Management
-            clearInterval(simulationIntervalID); // Stop any simulation
-            simulationIntervalID = null;
-            
-            if (view === 'user') {
-                // This tab is now the master. Start the simulation.
-                simulationIntervalID = setInterval(() => {
-                    if (Patient.status !== 'CRITICAL') {
-                        // 1% chance of a random critical event (unnatural situation)
-                        if (Math.random() < 0.01) {
-                            simulateAlert('Critical Vitals');
-                            return; // simulateAlert will broadcast
-                        }
-
-                        // Small random variation for normal monitoring
-                        Patient.hr = 70 + Math.floor(Math.random() * 10) - 5;
-                        Patient.bpSystolic = 115 + Math.floor(Math.random() * 10) - 5;
-                        Patient.bpDiastolic = 75 + Math.floor(Math.random() * 10) - 5;
-                        Patient.lastUpdate = new Date();
-                        
-                        // Update HR History array
-                        Patient.hrHistory.push({
-                            timestamp: Patient.lastUpdate,
-                            value: Patient.hr
-                        });
-                        // Keep history limited to the last 60 points (~5 minutes)
-                        if (Patient.hrHistory.length > 60) {
-                            Patient.hrHistory.shift();
-                        }
-                        
-                        updateUI(); // Update vitals
-                        updateLocation(); // Update location
-                        drawHeartRateChart('hrChartUser');
-
-                    } else {
-                        // Update location and time only while critical
-                        Patient.lastUpdate = new Date();
-                        updateUI();
-                        updateLocation();
-                    }
-                    // Broadcast state on every tick
-                    broadcastState();
-                }, 5000); // 5-second update interval
-            }
 
             // Force chart redraw when changing views to ensure correct sizing
             if (view === 'user' || view === 'caretaker') {
                  // Defer redraw slightly to ensure container dimensions are stable after class removal
                  setTimeout(() => {
-                    // Only draw if history has data
-                    if(Patient.hrHistory.length > 0) {
-                        drawHeartRateChart('hrChartUser');
-                        drawHeartRateChart('hrChartCaretaker');
-                    }
+                    drawHeartRateChart('hrChartUser');
+                    drawHeartRateChart('hrChartCaretaker');
                  }, 50);
             }
-            
             updateUI(); 
-            // Update URL hash without reloading page
-            window.location.hash = view;
         }
         
-        // --- NEW: Storage Event Listener ---
-        window.addEventListener('storage', (event) => {
-            if (event.key === 'smartHealthState') {
-                const activeDashboard = document.querySelector('.dashboard-container:not(.hidden)').id;
-                
-                // If this tab is the one running the sim, ignore updates
-                if (activeDashboard === 'userDashboard') {
-                    return;
-                }
-
-                try {
-                    const newData = JSON.parse(event.newValue);
-                    if (!newData) return;
-
-                    // Re-hydrate dates from ISO strings
-                    newData.lastUpdate = new Date(newData.lastUpdate);
-                    newData.alerts.forEach(a => a.timestamp = new Date(a.timestamp));
-                    newData.hrHistory.forEach(h => h.timestamp = new Date(h.timestamp));
-
-                    // Update the local patient object
-                    Object.assign(Patient, newData);
-
-                    // Force UI update
-                    updateAlerts(); // This will call updateUI
-                    
-                    // Redraw charts if on a dashboard with a chart
-                    if (activeDashboard === 'caretakerDashboard') {
-                        drawHeartRateChart('hrChartCaretaker');
-                    }
-                } catch (e) {
-                    console.error("Error processing storage update:", e);
-                }
-            }
-        });
-
-        // --- NEW: Helper to populate initial data ---
-        function populateInitialHistory() {
+        // --- Initialization ---
+        window.onload = function() {
+            // Populate initial history data (20 dummy points)
             const now = Date.now();
             for (let i = 20; i >= 1; i--) {
                 Patient.hrHistory.push({
@@ -1014,48 +783,42 @@
                     value: 70 + Math.floor(Math.random() * 10) // Base line HR
                 });
             }
-            if(Patient.hrHistory.length > 0) {
-                Patient.hr = Patient.hrHistory[Patient.hrHistory.length - 1].value;
-            }
-        }
-        
-        // --- Initialization (UPDATED) ---
-        window.onload = function() {
-            lucide.createIcons();
-            
-            // Check for existing state in localStorage
-            const existingState = localStorage.getItem('smartHealthState');
-            if (existingState) {
-                try {
-                    const newData = JSON.parse(existingState);
-                    // Re-hydrate dates
-                    newData.lastUpdate = new Date(newData.lastUpdate);
-                    newData.alerts.forEach(a => a.timestamp = new Date(a.timestamp));
-                    newData.hrHistory.forEach(h => h.timestamp = new Date(h.timestamp));
-                    // Overwrite the default Patient object
-                    Object.assign(Patient, newData);
-                } catch (e) {
-                    console.error("Failed to parse existing state", e);
-                    localStorage.removeItem('smartHealthState');
-                    populateInitialHistory(); // Populate with defaults
+
+            showDashboard('user'); 
+            updateUI();
+
+            // Simulate real-time data update every 5 seconds
+            setInterval(() => {
+                if (Patient.status !== 'CRITICAL') {
+                    // 1% chance of a random critical event (unnatural situation)
+                    if (Math.random() < 0.01) {
+                        simulateAlert('Critical Vitals');
+                        return;
+                    }
+
+                    // Small random variation for normal monitoring
+                    Patient.hr = 70 + Math.floor(Math.random() * 10) - 5;
+                    Patient.bpSystolic = 115 + Math.floor(Math.random() * 10) - 5;
+                    Patient.bpDiastolic = 75 + Math.floor(Math.random() * 10) - 5;
+                    Patient.lastUpdate = new Date();
+                    
+                    // Update HR History array
+                    Patient.hrHistory.push({
+                        timestamp: Patient.lastUpdate,
+                        value: Patient.hr
+                    });
+                    // Keep history limited to the last 60 points (~5 minutes)
+                    if (Patient.hrHistory.length > 60) {
+                        Patient.hrHistory.shift();
+                    }
+                    
+                    updateUI();
+                } else {
+                    // Update location and time only while critical
+                    Patient.lastUpdate = new Date();
+                    updateUI();
                 }
-            } else {
-                 populateInitialHistory(); // Populate with defaults
-            }
-
-            // NEW: URL Hash-based routing
-            let initialView = 'user';
-            const hash = window.location.hash;
-            if (hash === '#caretaker') {
-                initialView = 'caretaker';
-            } else if (hash === '#hospital') {
-                initialView = 'hospital';
-            }
-            
-            showDashboard(initialView); 
-            updateAlerts(); // Use this to do the initial UI draw
-
-            // The main simulation interval is now controlled by showDashboard()
+            }, 5000); // 5-second update interval
         };
     </script>
 </body>
