@@ -113,7 +113,7 @@
     <!-- Main Content Area -->
     <div id="mainContent" class="flex-1 p-4 sm:p-8 overflow-y-auto">
 
-        <!-- Emergency Alert Modal (Visible across all dashboards when active) -->
+        <!-- Emergency Alert Modal (Visible across only Caretaker/Hospital dashboards when active) -->
         <div id="globalAlert" class="hidden fixed inset-0 bg-red-900/90 backdrop-blur-sm z-30 flex items-center justify-center p-4">
             <div class="bg-red-700 border-4 border-red-300 p-8 rounded-2xl shadow-2xl text-center max-w-lg w-full transform transition-all scale-100">
                 <i data-lucide="octagon-alert" class="w-20 h-20 mx-auto text-red-100 mb-4 animate-bounce"></i>
@@ -228,6 +228,18 @@
         <div id="caretakerDashboard" class="dashboard-container space-y-8 hidden">
             <h1 class="text-4xl font-extrabold text-violet-300 mb-6">Caretaker Dashboard: John Doe</h1>
             
+            <!-- Caretaker Status Banner -->
+            <div id="ctStatusBanner" class="p-6 rounded-2xl shadow-2xl border-l-4">
+                <div class="flex items-center space-x-4">
+                    <i id="ctStatusIcon" data-lucide="check-circle" class="w-8 h-8 flex-shrink-0 text-green-400"></i>
+                    <div>
+                        <h2 id="ctStatusTitle" class="text-2xl font-bold">Status: NORMAL</h2>
+                        <p id="ctStatusMessage" class="text-lg text-gray-300">All vitals within safe parameters. No immediate action required.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- End NEW -->
+
             <!-- Current Status Overview & Chart -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                  <div class="bg-gray-800 p-6 rounded-2xl shadow-xl lg:col-span-1">
@@ -295,6 +307,18 @@
 
         <div id="hospitalDashboard" class="dashboard-container space-y-8 hidden">
             <h1 class="text-4xl font-extrabold text-violet-300 mb-6">Hospital Triage Dashboard</h1>
+
+            <!-- Hospital Status Banner -->
+            <div id="hospStatusBanner" class="p-6 rounded-2xl shadow-2xl border-l-4">
+                <div class="flex items-center space-x-4">
+                    <i id="hospStatusIcon" data-lucide="check-circle" class="w-8 h-8 flex-shrink-0 text-green-400"></i>
+                    <div>
+                        <h2 id="hospStatusTitle" class="text-2xl font-bold">Patient John Doe: STABLE</h2>
+                        <p id="hospStatusMessage" class="text-lg text-gray-300">Patient is currently stable. Monitor for changes.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- End NEW -->
 
             <!-- Simulated Patient List -->
             <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
@@ -381,7 +405,10 @@
             }
         };
 
-        // --- DOMElements (Same as before) ---
+        // Global state to track the current view (user, caretaker, hospital)
+        let currentView = 'user'; // Initialize to the patient view
+
+        // --- DOMElements (Added new status banner elements) ---
         const DOMElements = {
             // User Dashboard
             hrCard: document.getElementById('hrCard'),
@@ -404,6 +431,10 @@
             alertReason: document.getElementById('alertReason'),
             
             // Caretaker Dashboard
+            ctStatusBanner: document.getElementById('ctStatusBanner'),
+            ctStatusTitle: document.getElementById('ctStatusTitle'),
+            ctStatusIcon: document.getElementById('ctStatusIcon'),
+            ctStatusMessage: document.getElementById('ctStatusMessage'),
             ctHrValue: document.getElementById('ctHrValue'),
             ctBpValue: document.getElementById('ctBpValue'),
             ctLastIncident: document.getElementById('ctLastIncident'),
@@ -412,6 +443,10 @@
             hrChartCaretaker: document.getElementById('hrChartCaretaker'),
 
             // Hospital Dashboard
+            hospStatusBanner: document.getElementById('hospStatusBanner'),
+            hospStatusTitle: document.getElementById('hospStatusTitle'),
+            hospStatusIcon: document.getElementById('hospStatusIcon'),
+            hospStatusMessage: document.getElementById('hospStatusMessage'),
             hospitalAlertList: document.getElementById('hospitalAlertList'),
             hospitalAlertBadge: document.getElementById('hospitalAlertBadge'),
             hospStatusJohnDoe: document.getElementById('hospStatusJohnDoe'),
@@ -431,6 +466,7 @@
                     "octaves" : 10
                 }).toDestination();
                 
+                // Start Tone context on first user interaction
                 document.documentElement.addEventListener('click', () => {
                     if (Tone.context.state !== 'running') { Tone.start(); }
                 }, { once: true });
@@ -458,7 +494,7 @@
             isPlayingAlarm = false;
         }
         
-        // --- D3 Charting Logic (NEW) ---
+        // --- D3 Charting Logic ---
         const CHART_MARGIN = { top: 10, right: 20, bottom: 30, left: 40 };
 
         function drawHeartRateChart(containerId) {
@@ -526,7 +562,7 @@
                 .attr("d", line);
         }
 
-        // --- Location Tracking Logic (NEW) ---
+        // --- Location Tracking Logic ---
         function updateLocation() {
             // Update marker position
             const marker = DOMElements.patientMarker;
@@ -534,7 +570,7 @@
             marker.style.left = `${Patient.location.x}%`;
             
             // Update text
-            DOMElements.locationText.textContent = `Location: ${Patient.location.room} (${Patient.location.x}%, ${Patient.location.y}%)`;
+            DOMElements.locationText.textContent = `Location: ${Patient.location.room} (${Patient.location.x.toFixed(0)}%, ${Patient.location.y.toFixed(0)}%)`;
 
             // Randomly move location within bounds (5% to 95%) and room
             if (Patient.status !== 'CRITICAL') {
@@ -561,14 +597,15 @@
             // Calculate status colors
             const hrCrit = Patient.hr < 50 || Patient.hr > 110;
             const bpCrit = Patient.bpSystolic > 160 || Patient.bpSystolic < 90 || Patient.bpDiastolic > 100 || Patient.bpDiastolic < 60;
-            const isCritical = hrCrit || bpCrit || Patient.fallDetected;
-
+            
             let overallStatus = 'NORMAL';
-            if (isCritical) {
+            if (hrCrit || bpCrit || Patient.fallDetected) {
                 overallStatus = 'CRITICAL';
             } else if (Patient.hr > 100 || Patient.hr < 60 || Patient.bpSystolic > 140) {
                 overallStatus = 'WARNING';
             }
+            
+            Patient.status = overallStatus; // Ensure Patient status is synced with actual vitals
 
             // Apply color coding (simplified class logic for brevity)
             const hrColor = hrCrit ? 'red' : (Patient.hr > 100 || Patient.hr < 60 ? 'yellow' : 'green');
@@ -580,8 +617,13 @@
                 const card = DOMElements[`${v}Card`];
                 const statusEl = DOMElements[`${v}Status`];
                 const color = v === 'hr' ? hrColor : (v === 'bp' ? bpColor : fallColor);
-                card.className = card.className.replace(/border-(red|yellow|green)-\d{3,}/g, `border-${color}-500`);
+                
+                // Reset classes
+                card.classList.remove('border-red-500', 'border-yellow-500', 'border-green-500');
                 statusEl.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
+
+                // Apply new classes
+                card.classList.add(`border-${color}-500`);
                 statusEl.classList.add(`text-${color}-400`);
             });
             
@@ -598,14 +640,72 @@
             DOMElements.patientRowJohnDoe.classList.toggle('bg-red-900/50', overallStatus === 'CRITICAL');
             DOMElements.patientRowJohnDoe.classList.toggle('animate-pulse', overallStatus === 'CRITICAL');
 
-            // 4. Update Chart and Location
+            // 4. Update Caretaker and Hospital Status Banners
+            updateStatusBanners(overallStatus);
+
+            // 5. Update Chart and Location
             drawHeartRateChart('hrChartUser');
             drawHeartRateChart('hrChartCaretaker');
             updateLocation();
         }
         
+        function updateStatusBanners(status) {
+            const updates = {
+                'NORMAL': { color: 'green', icon: 'check-circle', title: 'STABLE: All Systems Nominal', message: 'All vitals within safe parameters. No immediate action required.', pulse: false },
+                'WARNING': { color: 'yellow', icon: 'alert-triangle', title: 'WARNING: Elevated Risk Detected', message: 'Vitals are approaching critical limits. Monitor patient closely.', pulse: true },
+                'CRITICAL': { color: 'red', icon: 'octagon-alert', title: 'CRITICAL: EMERGENCY RESPONSE REQUIRED', message: 'Immediate assistance is needed. See alerts log for details.', pulse: true }
+            };
+
+            const data = updates[status] || updates['NORMAL'];
+
+            [DOMElements.ctStatusBanner, DOMElements.hospStatusBanner].forEach((banner, index) => {
+                const titleEl = index === 0 ? DOMElements.ctStatusTitle : DOMElements.hospStatusTitle;
+                const messageEl = index === 0 ? DOMElements.ctStatusMessage : DOMElements.hospStatusMessage;
+                const iconEl = index === 0 ? DOMElements.ctStatusIcon : DOMElements.hospStatusIcon;
+                
+                // 1. Color and Pulse
+                banner.className = banner.className.replace(/bg-(red|yellow|green)-\d{3,}/g, '').replace(/border-(red|yellow|green)-\d{3,}/g, '');
+                banner.classList.add(`bg-${data.color}-900/50`, `border-${data.color}-500`);
+                banner.classList.toggle('alert-pulse', data.pulse);
+                
+                // 2. Text Content
+                titleEl.textContent = index === 1 ? `Patient John Doe: ${data.title}` : `Status: ${data.title}`;
+                messageEl.textContent = data.message;
+                
+                // 3. Icon
+                iconEl.setAttribute('data-lucide', data.icon);
+                iconEl.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
+                iconEl.classList.add(`text-${data.color}-400`);
+            });
+            
+            // Re-render lucide icons after attribute change
+            lucide.createIcons();
+        }
+
+        // --- New function to control modal visibility and audio ---
+        function checkAndDisplayModal() {
+            const criticalAlerts = Patient.alerts.filter(a => a.severity === 'CRITICAL');
+            const alertCount = criticalAlerts.length;
+
+            // Condition 1: Alert exists AND current user is Caretaker or Hospital
+            if (alertCount > 0 && (currentView === 'caretaker' || currentView === 'hospital')) {
+                DOMElements.globalAlert.classList.remove('hidden');
+                playCriticalTone();
+                
+                // Update alert reason text
+                const latestAlert = criticalAlerts[0];
+                DOMElements.alertReason.textContent = `${latestAlert.type} Detected! Vitals: HR ${Patient.hr}, BP ${Patient.bpSystolic}/${Patient.bpDiastolic}.`;
+                DOMElements.ctLastIncident.textContent = `${latestAlert.type} (${formatTime(latestAlert.timestamp)})`;
+                Patient.status = 'CRITICAL'; 
+                
+            } else {
+                // Condition 2: No alerts OR current user is Patient
+                DOMElements.globalAlert.classList.add('hidden');
+                stopCriticalTone();
+            }
+        }
+        
         function updateAlerts() {
-            // ... (Alerts logic remains the same)
             const listCaretaker = DOMElements.caretakerAlertList;
             const listHospital = DOMElements.hospitalAlertList;
             
@@ -621,19 +721,11 @@
             DOMElements.hospitalAlertBadge.classList.toggle('hidden', alertCount === 0);
 
             if (alertCount === 0) {
-                stopCriticalTone(); 
                 listCaretaker.innerHTML = '<li class="p-3 bg-gray-700 rounded-lg text-gray-400">No recent critical alerts.</li>';
                 listHospital.innerHTML = '<li class="p-3 bg-gray-700 rounded-lg text-gray-400">No critical alerts requiring action.</li>';
-                DOMElements.globalAlert.classList.add('hidden');
                 DOMElements.ctLastIncident.textContent = `None (${formatTime(Patient.lastUpdate)})`;
+                Patient.status = 'NORMAL'; 
             } else {
-                playCriticalTone(); 
-                DOMElements.globalAlert.classList.remove('hidden');
-                
-                const latestAlert = criticalAlerts[0];
-                DOMElements.alertReason.textContent = `${latestAlert.type} Detected! Vitals: HR ${Patient.hr}, BP ${Patient.bpSystolic}/${Patient.bpDiastolic}.`;
-                DOMElements.ctLastIncident.textContent = `${latestAlert.type} (${formatTime(latestAlert.timestamp)})`;
-
                 criticalAlerts.forEach(alert => {
                     const listItemHTML = `
                         <li class="alert-pulse p-4 bg-red-900 border-l-4 border-red-500 rounded-lg flex justify-between items-center text-red-100 font-medium">
@@ -647,13 +739,14 @@
                 lucide.createIcons(); 
             }
             
-            const latestLogEntry = Patient.alerts.length > 0 ? Patient.alerts[0] : { timestamp: Patient.lastUpdate, message: "Readings are nominal." };
+            const latestLogEntry = Patient.alerts.length > 0 ? Patient.alerts[0] : { timestamp: Patient.lastUpdate, message: "Readings are nominal.", severity: 'NORMAL' };
             const logHTML = `<p class="${latestLogEntry.severity === 'CRITICAL' ? 'text-red-400 font-bold' : 'text-gray-300'}">[${formatTime(latestLogEntry.timestamp)}] ${latestLogEntry.message}</p>`;
             DOMElements.activityLog.insertAdjacentHTML('afterbegin', logHTML);
             while (DOMElements.activityLog.children.length > 5) {
                 DOMElements.activityLog.removeChild(DOMElements.activityLog.lastChild);
             }
             
+            checkAndDisplayModal(); // Check modal visibility
             updateUI();
         }
         
@@ -664,7 +757,8 @@
         // --- Alert Simulation and Dismissal ---
         
         function simulateAlert(type) {
-            if (Patient.alerts.length > 0) return;
+            // Allow alert only if status is not already CRITICAL
+            if (Patient.status === 'CRITICAL') return;
             
             Patient.status = 'CRITICAL';
             Patient.lastUpdate = new Date();
@@ -725,13 +819,14 @@
                 Patient.status = 'NORMAL';
             }
             
+            // Only critical alerts remain persistent
             Patient.alerts = Patient.alerts.filter(a => a.severity === 'CRITICAL');
             
             updateAlerts();
         }
 
         function dismissAlert() {
-            stopCriticalTone(); // Ensure audio stops
+            // No need to stop tone here, checkAndDisplayModal handles it
             Patient.alerts = [];
             Patient.fallDetected = false;
             // Reset vitals to a safe state after incident resolution
@@ -750,6 +845,8 @@
         
         // --- View Switching Logic ---
         function showDashboard(view) {
+            currentView = view; // Set the global current view tracker
+            
             document.querySelectorAll('.dashboard-container').forEach(el => el.classList.add('hidden'));
             document.getElementById(`${view}Dashboard`).classList.remove('hidden');
             
@@ -764,12 +861,13 @@
 
             // Force chart redraw when changing views to ensure correct sizing
             if (view === 'user' || view === 'caretaker') {
-                 // Defer redraw slightly to ensure container dimensions are stable after class removal
                  setTimeout(() => {
                     drawHeartRateChart('hrChartUser');
                     drawHeartRateChart('hrChartCaretaker');
                  }, 50);
             }
+            
+            checkAndDisplayModal(); // IMPORTANT: Check if the modal should appear/disappear based on the new view
             updateUI(); 
         }
         
@@ -784,7 +882,7 @@
                 });
             }
 
-            showDashboard('user'); 
+            showDashboard('user'); // Initial view set to user
             updateUI();
 
             // Simulate real-time data update every 5 seconds
