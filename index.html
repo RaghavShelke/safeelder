@@ -407,7 +407,8 @@
 
         // Global state to track the current view (user, caretaker, hospital)
         let currentView = 'user'; // Initialize to the patient view
-
+        let normalUpdateCount = 0; // Tracks consecutive normal updates
+        
         // --- DOMElements (Added new status banner elements) ---
         const DOMElements = {
             // User Dashboard
@@ -652,7 +653,7 @@
         function updateStatusBanners(status) {
             const updates = {
                 'NORMAL': { color: 'green', icon: 'check-circle', title: 'STABLE: All Systems Nominal', message: 'All vitals within safe parameters. No immediate action required.', pulse: false },
-                'WARNING': { color: 'yellow', icon: 'alert-triangle', title: 'WARNING: Elevated Risk Detected', message: 'Vitals are approaching critical limits. Monitor patient closely.', pulse: true },
+                'WARNING': { color: 'yellow', icon: 'alert-triangle', title: 'WARNING: Elevated Risk Detected', message: 'Vitals are approaching critical limits. Monitor patient closely.', pulse: false }, // Removed pulse for warning
                 'CRITICAL': { color: 'red', icon: 'octagon-alert', title: 'CRITICAL: EMERGENCY RESPONSE REQUIRED', message: 'Immediate assistance is needed. See alerts log for details.', pulse: true }
             };
 
@@ -758,7 +759,7 @@
         
         function simulateAlert(type) {
             // Allow alert only if status is not already CRITICAL
-            if (Patient.status === 'CRITICAL') return;
+            // NOTE: We allow this if called from the interval logic which resets the counter after critical is triggered.
             
             Patient.status = 'CRITICAL';
             Patient.lastUpdate = new Date();
@@ -766,6 +767,8 @@
             
             if (type === 'Fall Detected') {
                 Patient.fallDetected = true;
+                Patient.hr = 95; // High HR post-fall
+                Patient.bpSystolic = 145;
                 message = "Automated: Fall detected and confirmed. Immediate assistance required.";
                 // Pin location marker to a corner to simulate impact
                 Patient.location.x = 90; 
@@ -778,6 +781,15 @@
                 message = "Automated: Critical Vitals detected (Extreme Bradychardia/Hypertension). Check HR/BP readings immediately.";
             } else if (type === 'Emergency Button Pressed') {
                  message = "User Pressed Emergency Button. Contacting Caretaker/Hospital.";
+            }
+
+            // Update HR History with critical data point for chart
+             Patient.hrHistory.push({
+                timestamp: Patient.lastUpdate,
+                value: Patient.hr
+            });
+            if (Patient.hrHistory.length > 60) {
+                Patient.hrHistory.shift();
             }
 
             Patient.alerts.unshift({
@@ -809,6 +821,8 @@
                 });
 
             } else if (level === 'critical') {
+                // Manually triggered critical event resets the scheduled pattern
+                normalUpdateCount = 0;
                 simulateAlert(Math.random() > 0.5 ? 'Fall Detected' : 'Critical Vitals');
                 return;
             } else {
@@ -826,7 +840,10 @@
         }
 
         function dismissAlert() {
-            // No need to stop tone here, checkAndDisplayModal handles it
+            // Stop audio
+            stopCriticalTone();
+            
+            // Reset patient state
             Patient.alerts = [];
             Patient.fallDetected = false;
             // Reset vitals to a safe state after incident resolution
@@ -888,12 +905,18 @@
             // Simulate real-time data update every 5 seconds
             setInterval(() => {
                 if (Patient.status !== 'CRITICAL') {
-                    // 1% chance of a random critical event (unnatural situation)
-                    if (Math.random() < 0.01) {
-                        simulateAlert('Critical Vitals');
-                        return;
+                    
+                    if (normalUpdateCount === 2) { 
+                        // CRITICAL cycle: Time for the critical update after 2 normal ones
+                        normalUpdateCount = 0; // Reset counter
+                        // Trigger a fall or critical vitals randomly
+                        simulateAlert(Math.random() > 0.5 ? 'Fall Detected' : 'Critical Vitals'); 
+                        return; 
                     }
-
+                    
+                    // NORMAL cycle: Increment counter and update vitals normally
+                    normalUpdateCount++;
+                    
                     // Small random variation for normal monitoring
                     Patient.hr = 70 + Math.floor(Math.random() * 10) - 5;
                     Patient.bpSystolic = 115 + Math.floor(Math.random() * 10) - 5;
@@ -911,8 +934,9 @@
                     }
                     
                     updateUI();
+
                 } else {
-                    // Update location and time only while critical
+                    // Patient is CRITICAL: only update location/time, wait for manual dismissAlert
                     Patient.lastUpdate = new Date();
                     updateUI();
                 }
